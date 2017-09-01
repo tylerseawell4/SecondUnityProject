@@ -5,18 +5,22 @@ using UnityEngine;
 public class PlayerMobileMovement : MonoBehaviour
 {
     public Rigidbody2D thePlayerRigidBody;
-    public float _moveSpeed;
     private bool _facingRight;
-    private float _bounceModifier = 1.5f;
-    private float _bounceForce = 10f;
+    public int _numberOfBounces;
+    public float _playerSpeed;
+    public float _moveSpeed;
+    public float _nextBounceIncrease;
     private int _bounceHits = 0;
-    private float _highestVelocityX;
-    private float _highestVelocityY;
+    private float _highestYCoordinate;
+    private float _currentYCoordinate;
+    private Vector3 _nextYVector;
     // Use this for initialization
     void Start()
     {
         Screen.orientation = ScreenOrientation.Portrait;
-        _moveSpeed = 4f;
+        //_numberOfBounces = 3;
+        //_playerSpeed = 2;
+        _highestYCoordinate = thePlayerRigidBody.position.y;
         _facingRight = true;
     }
 
@@ -46,6 +50,11 @@ public class PlayerMobileMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        _currentYCoordinate = thePlayerRigidBody.position.y;
+
+        if (_currentYCoordinate > _highestYCoordinate)
+            _highestYCoordinate = thePlayerRigidBody.position.y;
+
         //creating neutral zone for flip
         if (thePlayerRigidBody.velocity.x < -.025f && _facingRight)
         {
@@ -72,16 +81,10 @@ public class PlayerMobileMovement : MonoBehaviour
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        if (_bounceHits < 2)
+        if (_bounceHits < _numberOfBounces)
         {
-            thePlayerRigidBody.velocity = new Vector3(thePlayerRigidBody.velocity.x, _bounceForce, 0f);
-            _bounceForce *= _bounceModifier;
-            _highestVelocityX = thePlayerRigidBody.velocity.x;
-            _highestVelocityY = thePlayerRigidBody.velocity.y;
-        }
-        else
-        {
-            thePlayerRigidBody.velocity = new Vector3(_highestVelocityX, _highestVelocityY, 0f);
+            _nextYVector = new Vector3(transform.position.x, (transform.position.y + (_highestYCoordinate += _nextBounceIncrease)), 0f);
+            transform.position = Vector3.Lerp(transform.position, _nextYVector, Time.deltaTime * _moveSpeed);
         }
         _bounceHits++;
     }
